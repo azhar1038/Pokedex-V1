@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
+import com.az.learncompose.pokedex.ui.view.pokemonlist.PokemonListView
 
 @Composable
 fun Pokedex(){
@@ -18,7 +19,7 @@ fun Pokedex(){
         startDestination = "pokemon_list",
     ) {
         composable("pokemon_list"){
-            Text("Pokemon List")
+            PokemonListView(navController)
         }
         composable(
             route = "pokemon_detail/{dominantColor}/{pokemonName}",
