@@ -1,32 +1,28 @@
 package com.az.learncompose.pokedex.ui.view.pokemonlist
 
-import android.util.Log
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,8 +31,6 @@ import coil.request.ImageRequest
 import com.az.learncompose.pokedex.R
 import com.az.learncompose.pokedex.data.models.PokedexListEntry
 import com.az.learncompose.pokedex.ui.theme.RobotoCondensed
-import com.google.accompanist.coil.rememberCoilPainter
-import com.google.accompanist.imageloading.ImageLoadState
 
 @Composable
 fun PokemonListView(
@@ -63,20 +57,8 @@ fun PokemonListView(
             ) {
 
             }
-            PokedexRow(
-                rowIndex = 0,
-                entries = listOf(
-                    PokedexListEntry(
-                        "bulbasaur",
-                        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png",
-                        1
-                    ),
-                    PokedexListEntry(
-                        "ivysaur",
-                        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/2.png",
-                        2
-                    )
-                ),
+            Spacer(Modifier.height(16.dp))
+            PokemonList(
                 navController = navController
             )
         }
@@ -129,30 +111,73 @@ fun SearchBar(
 }
 
 @Composable
+fun PokemonList(
+    navController: NavController,
+    viewModel: PokemonListViewModel = hiltViewModel()
+) {
+    val pokemonList by remember { viewModel.pokemonList }
+    val endReached by remember { viewModel.endReached }
+    val isLoading by remember { viewModel.isLoading }
+    val loadError by remember { viewModel.loadError }
+
+    LazyColumn(contentPadding = PaddingValues(16.dp)) {
+        val itemCount = if (pokemonList.size % 2 == 0) {
+            pokemonList.size / 2
+        } else {
+            pokemonList.size / 2 + 1
+        }
+
+        items(itemCount) {
+            if (it >= itemCount - 1 && !endReached && !isLoading) {
+                viewModel.loadPokemonPaginated()
+            }
+            PokedexRow(rowIndex = it, entries = pokemonList, navController = navController)
+        }
+    }
+
+    Box(
+        contentAlignment = Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(color = MaterialTheme.colors.primary)
+        }
+        if (loadError.isNotEmpty()) {
+            RetrySection(error = loadError) {
+                viewModel.loadPokemonPaginated()
+            }
+        }
+    }
+}
+
+@Composable
 fun PokedexEntry(
     entry: PokedexListEntry,
     navController: NavController,
     modifier: Modifier = Modifier,
     viewModel: PokemonListViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val defaultDominantColor = MaterialTheme.colors.surface
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
 
-    val painter = rememberCoilPainter(
-        request = ImageRequest.Builder(LocalContext.current)
-            .data(entry.imageUrl)
-            .target {
-                viewModel.calcDominantColor(it) { color ->
-                    dominantColor = color
-                }
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    val request = ImageRequest.Builder(context)
+        .data(entry.imageUrl)
+        .crossfade(true)
+        .build()
+
+    LaunchedEffect(key1 = entry.imageUrl) {
+        bitmap = viewModel.getBitmap(request)
+        if (bitmap != null) {
+            viewModel.calcDominantColor(bitmap!!) {
+                dominantColor = it
             }
-            .build(),
-        fadeIn = true
-    )
-
-
+        }
+    }
 
     Box(
         contentAlignment = Center,
@@ -174,31 +199,22 @@ fun PokedexEntry(
                 )
             }
     ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .align(CenterHorizontally)
-            ) {
-                Image(
-                    painter = painter,
-                    contentDescription = "${entry.pokemonName} Image",
+        Column(
+            horizontalAlignment = CenterHorizontally
+
+        ) {
+            if (bitmap == null) {
+                CircularProgressIndicator(
+                    modifier = Modifier.scale(0.5f)
                 )
-                when (painter.loadState) {
-                    is ImageLoadState.Loading -> {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colors.primary,
-                            modifier = Modifier.scale(0.5f)
-                        )
-                    }
-                    is ImageLoadState.Error -> {
-                        Icon(
-                            Icons.Rounded.Warning,
-                            contentDescription = "Failed to load image",
-                        )
-                    }
-                }
+            } else {
+                Image(
+                    bitmap = bitmap!!.asImageBitmap(),
+                    contentDescription = "${entry.pokemonName} image",
+                    modifier = Modifier.size(100.dp)
+                )
             }
+
             Text(
                 text = entry.pokemonName,
                 fontFamily = RobotoCondensed,
@@ -238,10 +254,19 @@ fun PokedexRow(
     }
 }
 
-@Preview(showBackground = false)
 @Composable
-fun PreviewSearchBar() {
-    SearchBar(
-        hint = "Search"
-    )
+fun RetrySection(
+    error: String,
+    onRetry: () -> Unit
+) {
+    Column {
+        Text(error, color = Color.Red, fontSize = 18.sp)
+        Spacer(Modifier.height(8.dp))
+        Button(
+            onClick = onRetry,
+            modifier = Modifier.align(CenterHorizontally)
+        ) {
+            Text("Retry")
+        }
+    }
 }
