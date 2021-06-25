@@ -1,5 +1,6 @@
 package com.az.learncompose.pokedex.repository.pokemon
 
+import android.util.Log
 import com.az.learncompose.pokedex.data.remote.PokeApi
 import com.az.learncompose.pokedex.data.remote.responses.Pokemon
 import com.az.learncompose.pokedex.data.remote.responses.PokemonList
@@ -15,7 +16,6 @@ class DefaultPokemonRepository @Inject constructor(
         }catch(e: Exception){
             return Resource.Error("Something went wrong!")
         }
-
         return Resource.Success(response)
     }
 

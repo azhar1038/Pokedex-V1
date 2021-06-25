@@ -4,6 +4,8 @@ import com.az.learncompose.pokedex.data.remote.PokeApi
 import com.az.learncompose.pokedex.repository.pokemon.DefaultPokemonRepository
 import com.az.learncompose.pokedex.repository.pokemon.PokemonRepository
 import com.az.learncompose.pokedex.util.Constants.BASE_URL
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,10 +21,13 @@ object AppModule {
     @Singleton
     @Provides
     fun providePokeApi(): PokeApi{
+        val moshi = Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
         return Retrofit
             .Builder()
-            .addConverterFactory(MoshiConverterFactory.create())
             .baseUrl(BASE_URL)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(PokeApi::class.java)
     }
