@@ -1,22 +1,43 @@
 package com.az.learncompose.pokedex.data.remote.responses
 
+
+import com.squareup.moshi.Json
+
 data class Pokemon(
-    val abilities: List<PokemonAbility>,
+    @Json(name = "abilities")
+    val abilities: List<Ability>,
+    @Json(name = "base_experience")
     val baseExperience: Int,
-    val forms: List<PokemonForm>,
-    val gameIndices: List<PokemonGameIndice>,
+    @Json(name = "forms")
+    val forms: List<Form>,
+    @Json(name = "game_indices")
+    val gameIndices: List<GameIndice>,
+    @Json(name = "height")
     val height: Int,
-    val heldItems: List<PokemonHeldItem>,
+    @Json(name = "held_items")
+    val heldItems: List<Any>,
+    @Json(name = "id")
     val id: Int,
+    @Json(name = "is_default")
     val isDefault: Boolean,
+    @Json(name = "location_area_encounters")
     val locationAreaEncounters: String,
-    val moves: List<PokemonMove>,
+    @Json(name = "moves")
+    val moves: List<Move>,
+    @Json(name = "name")
     val name: String,
+    @Json(name = "order")
     val order: Int,
+    @Json(name = "past_types")
     val pastTypes: List<Any>,
-    val species: PokemonSpecies,
-    val sprites: PokemonSprites,
-    val stats: List<PokemonStat>,
-    val types: List<PokemonType>,
+    @Json(name = "species")
+    val species: Species,
+    @Json(name = "sprites")
+    val sprites: Sprites,
+    @Json(name = "stats")
+    val stats: List<Stat>,
+    @Json(name = "types")
+    val types: List<Type>,
+    @Json(name = "weight")
     val weight: Int
 )
