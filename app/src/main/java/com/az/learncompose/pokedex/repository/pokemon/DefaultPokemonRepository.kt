@@ -14,6 +14,7 @@ class DefaultPokemonRepository @Inject constructor(
         val response = try{
             pokeApi.getPokemonList(limit, offset)
         }catch(e: Exception){
+            Log.i("TAG", "getPokemonList: ${e.message}")
             return Resource.Error("Something went wrong!")
         }
         return Resource.Success(response)
@@ -23,6 +24,7 @@ class DefaultPokemonRepository @Inject constructor(
         val response = try{
             pokeApi.getPokemonInfo(pokemonName)
         }catch(e: Exception){
+            Log.i("TAG", "getPokemonList: ${e.message}")
             return Resource.Error("Something went wrong!")
         }
 
