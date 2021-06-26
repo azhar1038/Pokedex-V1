@@ -2,14 +2,16 @@ package com.az.learncompose.pokedex.data.remote.responses
 
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class Silver(
     @Json(name = "back_default")
-    val backDefault: String,
+    val backDefault: String = "",
     @Json(name = "back_shiny")
-    val backShiny: String,
+    val backShiny: String = "",
     @Json(name = "front_default")
-    val frontDefault: String,
+    val frontDefault: String = "",
     @Json(name = "front_shiny")
-    val frontShiny: String
+    val frontShiny: String = ""
 )
